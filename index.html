@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Генератор реальных профилей 🌍</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #111; color: #fff; padding: 20px; }
+    select, input, button { padding: 10px; margin: 10px 0; font-size: 16px; border-radius: 6px; border: none; }
+    button { background: #0078ff; color: #fff; cursor: pointer; font-weight: bold; }
+    #output { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 15px; }
+    .card { background: #222; padding: 12px; width: 250px; border-radius: 12px; box-shadow: 0 0 10px #000; line-height: 1.4em; }
+    .card strong { font-size: 18px; }
+    .card small { color: #aaa; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h2>Генератор реальных профилей 🌍</h2>
+
+<label>Страна:</label>
+<select id="country">
+    <option value="ru">Россия 🇷🇺</option>
+    <option value="us">США 🇺🇸</option>
+    <option value="ca">Канада 🇨🇦</option>
+    <option value="gb">Великобритания 🇬🇧</option>
+    <option value="de">Германия 🇩🇪</option>
+    <option value="fr">Франция 🇫🇷</option>
+    <option value="es">Испания 🇪🇸</option>
+    <option value="it">Италия 🇮🇹</option>
+    <option value="au">Австралия 🇦🇺</option>
+    <option value="nl">Нидерланды 🇳🇱</option>
+</select>
+
+<label>Количество профилей:</label>
+<input type="number" id="count" min="1" max="20" value="5">
+<button onclick="generate()">Сгенерировать</button>
+
+<div id="output"></div>
+
+<script>
+// Транслит кириллицы
+function translit(text) {
+    const map = {
+        "А":"A","Б":"B","В":"V","Г":"G","Д":"D","Е":"E","Ё":"E","Ж":"Zh",
+        "З":"Z","И":"I","Й":"I","К":"K","Л":"L","М":"M","Н":"N","О":"O",
+        "П":"P","Р":"R","С":"S","Т":"T","У":"U","Ф":"F","Х":"Kh","Ц":"Ts",
+        "Ч":"Ch","Ш":"Sh","Щ":"Shch","Ъ":"","Ы":"Y","Ь":"","Э":"E","Ю":"Yu","Я":"Ya",
+        "а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"e","ж":"zh",
+        "з":"z","и":"i","й":"i","к":"k","л":"l","м":"m","н":"n","о":"o",
+        "п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f","х":"kh","ц":"ts",
+        "ч":"ch","ш":"sh","щ":"shch","ъ":"","ы":"y","ь":"","э":"e","ю":"yu","я":"ya"
+    };
+    return text.split('').map(c => map[c] || c).join('');
+}
+
+// Списки русских имен и городов с индексами
+const russianData = [
+    {city:"Москва", zip:"101000"}, 
+    {city:"Санкт-Петербург", zip:"190000"},
+    {city:"Казань", zip:"420000"},
+    {city:"Екатеринбург", zip:"620000"},
+    {city:"Новосибирск", zip:"630000"}
+];
+const russianNames = ["Иван", "Алексей", "Мария", "Кирилл", "Екатерина", "Анастасия", "Дмитрий"];
+const russianSurnames = ["Иванов", "Петров", "Смирнов", "Кузнецов", "Попов", "Соколов", "Морозов"];
+const russianStreets = ["ул. Ленина", "пр-т Мира", "ул. Пушкина", "ул. Чехова", "ул. Гагарина"];
+const russianPhones = ["+7 912 345-67-89", "+7 900 987-65-43", "+7 915 111-22-33"];
+
+// Города и индексы для других стран (пример, можно расширять)
+const otherCountries = {
+    us: [{city:"New York", zip:"10001"}, {city:"Los Angeles", zip:"90001"}, {city:"Chicago", zip:"60601"}],
+    ca: [{city:"Toronto", zip:"M5H"}, {city:"Vancouver", zip:"V5K"}, {city:"Montreal", zip:"H1A"}],
+    gb: [{city:"London", zip:"EC1A"}, {city:"Manchester", zip:"M1"}, {city:"Birmingham", zip:"B1"}],
+    de: [{city:"Berlin", zip:"10115"}, {city:"Munich", zip:"80331"}, {city:"Hamburg", zip:"20095"}],
+    fr: [{city:"Paris", zip:"75001"}, {city:"Lyon", zip:"69001"}, {city:"Marseille", zip:"13001"}],
+    es: [{city:"Madrid", zip:"28001"}, {city:"Barcelona", zip:"08001"}, {city:"Valencia", zip:"46001"}],
+    it: [{city:"Rome", zip:"00100"}, {city:"Milan", zip:"20100"}, {city:"Naples", zip:"80100"}],
+    au: [{city:"Sydney", zip:"2000"}, {city:"Melbourne", zip:"3000"}, {city:"Brisbane", zip:"4000"}],
+    nl: [{city:"Amsterdam", zip:"1011"}, {city:"Rotterdam", zip:"3011"}, {city:"Utrecht", zip:"3511"}]
+};
+
+// Сопоставление стран к API randomuser.me
+const countryMap = {ru:"ru", us:"us", ca:"ca", gb:"gb", de:"de", fr:"fr", es:"es", it:"it", au:"au", nl:"nl"};
+
+async function generate() {
+    const output = document.getElementById("output");
+    output.innerHTML = "Загрузка... ⏳";
+    const count = parseInt(document.getElementById("count").value);
+    const countryCode = document.getElementById("country").value;
+    output.innerHTML = "";
+
+    if(countryCode === "ru") {
+        for(let i=0;i<count;i++){
+            const name = russianNames[Math.floor(Math.random()*russianNames.length)] + " " +
+                         russianSurnames[Math.floor(Math.random()*russianSurnames.length)];
+            const cityData = russianData[Math.floor(Math.random()*russianData.length)];
+            const street = russianStreets[Math.floor(Math.random()*russianStreets.length)] + ", " + Math.floor(Math.random()*100);
+            const phone = russianPhones[Math.floor(Math.random()*russianPhones.length)];
+            const card = document.createElement("div");
+            card.className="card";
+            card.innerHTML = `
+                <strong>${name}</strong><br>
+                <small>${cityData.city}</small><br><br>
+                🏠 Адрес: ${street}<br>
+                📮 Индекс: ${cityData.zip}<br>
+                📞 Телефон: ${phone}
+            `;
+            output.appendChild(card);
+        }
+    } else {
+        // Остальные страны через API
+        try{
+            const res = await fetch(`https://randomuser.me/api/?results=${count}&nat=${countryMap[countryCode]}`);
+            const data = await res.json();
+            const cities = otherCountries[countryCode];
+
+            data.results.forEach((user)=>{
+                const cityData = cities[Math.floor(Math.random()*cities.length)];
+                const name = translit(`${user.name.first} ${user.name.last}`);
+                const street = translit(`${Math.floor(Math.random()*999)} ${user.location.street.name}`);
+                const card = document.createElement("div");
+                card.className="card";
+                card.innerHTML = `
+                    <strong>${name}</strong><br>
+                    <small>${cityData.city}</small><br><br>
+                    🏠 Адрес: ${street}<br>
+                    📮 Индекс: ${cityData.zip}<br>
+                    📞 Телефон: ${user.phone}
+                `;
+                output.appendChild(card);
+            });
+        } catch(err){
+            output.innerHTML = "Ошибка при загрузке данных 😢";
+            console.error(err);
+        }
+    }
+}
+</script>
+
+</body>
+</html>
